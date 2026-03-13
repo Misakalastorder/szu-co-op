@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="human_hand">
+
+  <!-- 根节点：用于整体位姿（朝向/位置）控制 -->
+  <link name="root_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+
+  <!-- 通过此关节调整手的整体朝向/位置 -->
+  <joint name="root_hand" type="fixed">
+    <origin xyz="0 0 0" rpy="0 -1.5708 0" />
+    <parent link="root_link" />
+    <child link="palm_link" />
+  </joint>
+
+  <!-- 手腕/手掌 -->
+  <link name="palm_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.1" />
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <!-- 简单长方形掌部，用圆柱近似 -->
+        <cylinder radius="0.02" length="0.08" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.8 0.8 0.8 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.02" length="0.08" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- 统一的指骨几何尺寸：直径0.005 -> 半径0.0025，长度0.04 -->
+  <!-- 下面各指的link都使用相同的几何，只改变位置和命名 -->
+
+  <!-- ============== 食指 (index) ============== -->
+  <!-- 关节1：palm -> index_1，轴 (0,0,1) -->
+  <link name="index_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <!-- 指骨沿x轴，圆柱默认沿z轴，旋转到x轴方向 -->
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="index_joint1" type="revolute">
+    <!-- 食指根部大致位于掌心前方、略偏正上方 -->
+    <origin xyz="0.04 0.02 0.01" rpy="0 0 0" />
+    <parent link="palm_link" />
+    <child link="index_1" />
+    <axis xyz=" 0 0 1" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <!-- 关节2：index_1 -> index_2，轴 (0,1,0) -->
+  <link name="index_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="index_joint2" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="index_1" />
+    <child link="index_2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <!-- 关节3：index_2 -> index_3，轴 (0,1,0) -->
+  <link name="index_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="index_joint3" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="index_2" />
+    <child link="index_3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <!-- 关节4：index_3 -> index_4，轴 (0,1,0) -->
+  <link name="index_4">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="index_joint4" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="index_3" />
+    <child link="index_4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <!-- 关节5：指尖固定关节 -->
+  <link name="index_tip">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+
+  <joint name="index_tip_joint" type="fixed">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="index_4" />
+    <child link="index_tip" />
+  </joint>
+
+  <!-- ============== 中指 (middle) ============== -->
+  <!-- 布局：在y方向略高于食指 -->
+  <link name="middle_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="middle_joint1" type="revolute">
+    <origin xyz="0.04 0 0.01" rpy="0 0 0" />
+    <parent link="palm_link" />
+    <child link="middle_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="middle_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="middle_joint2" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="middle_1" />
+    <child link="middle_2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="middle_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="middle_joint3" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="middle_2" />
+    <child link="middle_3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="middle_4">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="middle_joint4" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="middle_3" />
+    <child link="middle_4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="middle_tip">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+
+  <joint name="middle_tip_joint" type="fixed">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="middle_4" />
+    <child link="middle_tip" />
+  </joint>
+
+  <!-- ============== 无名指 (ring) ============== -->
+  <link name="ring_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ring_joint1" type="revolute">
+    <origin xyz="0.04 -0.01 0.01" rpy="0 0 0" />
+    <parent link="palm_link" />
+    <child link="ring_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="ring_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ring_joint2" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="ring_1" />
+    <child link="ring_2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="ring_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ring_joint3" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="ring_2" />
+    <child link="ring_3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="ring_4">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ring_joint4" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="ring_3" />
+    <child link="ring_4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="ring_tip">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+
+  <joint name="ring_tip_joint" type="fixed">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="ring_4" />
+    <child link="ring_tip" />
+  </joint>
+
+  <!-- ============== 小指 (pinky) ============== -->
+  <link name="pinky_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="pinky_joint1" type="revolute">
+    <origin xyz="0.04 -0.02 0.01" rpy="0 0 0" />
+    <parent link="palm_link" />
+    <child link="pinky_1" />
+    <axis xyz=" 0 0 1" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="pinky_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="pinky_joint2" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="pinky_1" />
+    <child link="pinky_2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="pinky_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="pinky_joint3" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="pinky_2" />
+    <child link="pinky_3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="pinky_4">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="pinky_joint4" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="pinky_3" />
+    <child link="pinky_4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="pinky_tip">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+
+  <joint name="pinky_tip_joint" type="fixed">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="pinky_4" />
+    <child link="pinky_tip" />
+  </joint>
+
+  <!-- ============== 大拇指 (thumb) ============== -->
+  <!-- 3个可动关节 + 1个固定指尖 -->
+  <!-- 拇指根部从掌心偏向y正方向（右手拇指指向y+） -->
+  <link name="thumb_1">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <!-- 拇指也沿x轴伸出 -->
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="thumb_joint1" type="revolute">
+    <origin xyz="0.02 0.03 0" rpy="0 0 0" />
+    <parent link="palm_link" />
+    <child link="thumb_1" />
+    <!-- 第一个关节轴 (0,0,1) -->
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="thumb_2">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="thumb_joint2" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="thumb_1" />
+    <child link="thumb_2" />
+    <!-- 第二个关节轴 (0,1,0) -->
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="thumb_3">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.02 0 0" rpy="0 1.5708 0" />
+      <geometry>
+        <cylinder radius="0.0025" length="0.04" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="thumb_joint3" type="revolute">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="thumb_2" />
+    <child link="thumb_3" />
+    <!-- 第三个关节轴 (0,1,0) -->
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+  </joint>
+
+  <link name="thumb_tip">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5" />
+    </inertial>
+  </link>
+
+  <joint name="thumb_tip_joint" type="fixed">
+    <origin xyz="0.04 0 0" rpy="0 0 0" />
+    <parent link="thumb_3" />
+    <child link="thumb_tip" />
+  </joint>
+
+</robot>
+

@@ -9,7 +9,7 @@ import torch
 
 from angle2real import create_hand_kinematics
 from config.variables_define import angle_limit_rob, hand_cfg, out_num_joint, urdf_file
-from hand_visualization import infer_edges_from_parents, visualize_joint_activity_region
+from config.hand_visualization import infer_edges_from_parents, visualize_joint_activity_region
 
 
 def main():

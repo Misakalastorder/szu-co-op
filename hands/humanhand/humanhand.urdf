@@ -74,9 +74,9 @@
     <parent link="palm_link" />
     <child link="index_1" />
     <axis xyz=" 0 0 1" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-0.174532" upper="0.174532" effort="1" velocity="1" />
   </joint>
-
+<!-- -10°/10° -->
   <!-- 关节2：index_1 -> index_2，轴 (0,1,0) -->
   <link name="index_2">
     <inertial>
@@ -103,9 +103,9 @@
     <parent link="index_1" />
     <child link="index_2" />
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-1.57" upper="1.57" effort="1" velocity="1" />
   </joint>
-
+<!-- -180°/180° -->
   <!-- 关节3：index_2 -> index_3，轴 (0,1,0) -->
   <link name="index_3">
     <inertial>
@@ -206,7 +206,7 @@
     <parent link="palm_link" />
     <child link="middle_1" />
     <axis xyz="0 0 1" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-0.174532" upper="0.174532" effort="1" velocity="1" />
   </joint>
 
   <link name="middle_2">
@@ -234,7 +234,7 @@
     <parent link="middle_1" />
     <child link="middle_2" />
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-1.57" upper="1.57" effort="1" velocity="1" />
   </joint>
 
   <link name="middle_3">
@@ -361,7 +361,7 @@
     <parent link="ring_1" />
     <child link="ring_2" />
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-1.57" upper="1.57" effort="1" velocity="1" />
   </joint>
 
   <link name="ring_3">
@@ -460,7 +460,7 @@
     <parent link="palm_link" />
     <child link="pinky_1" />
     <axis xyz=" 0 0 1" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-0.174532" upper="0.174532" effort="1" velocity="1" />
   </joint>
 
   <link name="pinky_2">
@@ -488,7 +488,7 @@
     <parent link="pinky_1" />
     <child link="pinky_2" />
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-1.57" upper="1.57" effort="1" velocity="1" />
   </joint>
 
   <link name="pinky_3">
@@ -591,7 +591,7 @@
     <child link="thumb_1" />
     <!-- 第一个关节轴 (0,0,1) -->
     <axis xyz="0 0 1" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-0.174532" upper="0.174532" effort="1" velocity="1" />
   </joint>
 
   <link name="thumb_2">
@@ -620,7 +620,7 @@
     <child link="thumb_2" />
     <!-- 第二个关节轴 (0,1,0) -->
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="1.57" effort="1" velocity="1" />
+    <limit lower="-1.57" upper="1.57" effort="1" velocity="1" />
   </joint>
 
   <link name="thumb_3">

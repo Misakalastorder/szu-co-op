@@ -12,7 +12,7 @@ from matplotlib.animation import FuncAnimation
 
 from angle2real import create_hand_kinematics
 from config.variables_define import angle_limit_rob, hand_cfg, out_num_joint, urdf_file
-from hand_visualization import infer_edges_from_parents, sweep_angles
+from config.hand_visualization import infer_edges_from_parents, sweep_angles
 
 
 def animate_single_joint_sweep(
@@ -102,6 +102,7 @@ def main():
 
     # FK 需要完整 joints_name 长度的角度向量；超出 out_num_joint 的（指尖fixed joint）保持为0
     num_fk_joints = len(hand_fk.joint_names)
+    print(num_fk_joints)
     base_angles = torch.zeros((1, num_fk_joints), dtype=torch.float32)
 
     # 为 out_num_joint 内的关节逐个扫动

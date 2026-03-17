@@ -7,12 +7,12 @@ import torch
 data_tpye = 'visionpro'
 # data_tpye = 'slahmr'
 #### 手型配置选择
-# hand_brand = 'linker'  
+hand_brand = 'linker'  
 # # 'yumi'  'linker'  'shadow' 'svhhand' 'inspire'
 # hand_brand = 'svhhand'
 # hand_brand = 'shadow'
 # hand_brand = 'inspire'
-hand_brand = 'human_hand'
+# hand_brand = 'human_hand'
 
 if data_tpye == 'visionpro':
     # scaling_factor = 1.0/0.061
@@ -976,7 +976,7 @@ elif hand_brand == 'inspire':
 
 elif hand_brand == 'human_hand':
     # 使用本仓库内生成的简易人手URDF
-    urdf_file = "D:\\2026\\code\\szu\\humanhand.urdf"
+    urdf_file = "D:\\2026\\code\\szu\\hands\\humanhand\\humanhand.urdf"
 
     # humanhand.urdf 不包含需要特殊忽略的正交双自由度关节对
     excluded_pairs = []
@@ -1111,31 +1111,31 @@ elif hand_brand == 'human_hand':
         [0.0, 0.0],     # root_hand (fixed)
 
         # thumb_joint1~3
-        [0.0, 1.57],
-        [0.0, 1.57],
+        [-0.174532, 0.174532],
+        [-1.57, 1.57],
         [0.0, 1.57],
 
         # index_joint1~4
-        [0.0, 1.57],
-        [0.0, 1.57],
+        [-0.174532, 0.174532],
+        [-1.57, 1.57],
         [0.0, 1.57],
         [0.0, 1.57],
 
         # middle_joint1~4
-        [0.0, 1.57],
-        [0.0, 1.57],
+        [-0.174532, 0.174532],
+        [-1.57, 1.57],
         [0.0, 1.57],
         [0.0, 1.57],
 
         # ring_joint1~4
-        [0.0, 1.57],
-        [0.0, 1.57],
+        [0.0, 1.57], # URDF中 ring_joint1 limit lower="0" upper="1.57"
+        [-1.57, 1.57],
         [0.0, 1.57],
         [0.0, 1.57],
 
         # pinky_joint1~4
-        [0.0, 1.57],
-        [0.0, 1.57],
+        [-0.174532, 0.174532],
+        [-1.57, 1.57],
         [0.0, 1.57],
         [0.0, 1.57],
     ]

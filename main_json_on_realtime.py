@@ -1,16 +1,15 @@
 '''
-调用 JSON 传感器数据驱动真实 LinkerHand 机器手
-参考自 main_h5_realtime.py, main_json_on_simulate.py
+实时读取串口传感器数据并驱动真实 LinkerHand 机器手（多进程）
+参考自 new_low.py, main_h5_realtime.py
 '''
-import numpy as np
+import multiprocessing as mp
+import re
 import time
-import json
-import os
-import sys
-from pathlib import Path
-from typing import Dict, List, Tuple
-import can
-import keyboard
+from queue import Empty, Full
+from typing import Dict, Optional
+
+import numpy as np
+import serial
 
 # 项目导入
 from LinkerHand.linker_hand_api import LinkerHandApi
@@ -46,7 +45,60 @@ joint_map = {
     20: 17, 21: 3, 22: 6, 23: 9, 24: 12
 }
 
-# JSON 手指到 Linker 18关节索引的映射
+# 传感器标定配置（与 new_low.py 保持一致）
+CALIBRATION_CONFIG = {
+    'thumb': [
+        (0, 2330, 0),
+        (2540, 2730, 30),
+        (2730, 2870, 60),
+        (2870, 4095, 90)
+    ],
+    'index': [
+        (0, 1985, 0),
+        (2000, 2160, 30),
+        (2160, 2320, 60),
+        (2320, 4095, 90)
+    ],
+    'middle': [
+        (0, 2020, 0),
+        (2020, 2090, 30),
+        (2090, 2180, 60),
+        (2280, 4095, 90)
+    ],
+    'ring': [
+        (0, 1940, 0),
+        (1990, 2110, 30),
+        (2110, 2210, 60),
+        (2210, 4095, 90)
+    ],
+    'pinky': [
+        (0, 2400, 0),
+        (2500, 2600, 30),
+        (2600, 2680, 60),
+        (2680, 4095, 90)
+    ]
+}
+
+# 数字ID到手指名称
+ID_TO_FINGER = {
+    1: 'thumb',
+    2: 'index',
+    3: 'middle',
+    4: 'ring',
+    5: 'back_hand',
+    6: 'pinky'
+}
+
+# 手指对应AD索引
+AD_INDEX_FOR_FINGER = {
+    'thumb': 0,
+    'index': 1,
+    'middle': 2,
+    'ring': 3,
+    'pinky': 4
+}
+
+# 传感器手指到 Linker 18关节索引
 finger_to_joint_indices = {
     "index":  [1, 2, 3],  
     "middle": [4, 5, 6],
@@ -57,22 +109,39 @@ finger_to_joint_indices = {
 
 FINGERS = ["thumb", "index", "middle", "ring", "pinky"]
 
-def load_frames(json_path: Path) -> List[Tuple[str, Dict[str, Dict[str, float]]]]:
-    raw = json.loads(json_path.read_text(encoding="utf-8"))
-    frames = []
-    for ts, records in raw.items():
-        if not isinstance(records, list): continue
-        finger2vals = {}
-        for rec in records:
-            name = rec.get("finger_name")
-            if name in FINGERS:
-                vals = {"angle": float(rec.get("angle", rec.get("angel", 0)))}
-                for k in ("pitch", "roll", "yaw"):
-                    if k in rec: vals[k] = float(rec[k])
-                finger2vals[name] = vals
-        frames.append((str(ts), finger2vals))
-    frames.sort(key=lambda x: x[0])
-    return frames
+AD_PATTERN = re.compile(r'AD:\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)')
+MPU_PATTERN = re.compile(
+    r'M(\d+):\s*'
+    r'P=([-+]?\d+\.\d+)\s+'
+    r'R=([-+]?\d+\.\d+)\s+'
+    r'Y=([-+]?\d+\.\d+)\s+'
+    r'aX=([-+]?\d+\.\d+)\s+'
+    r'aY=([-+]?\d+\.\d+)\s+'
+    r'aZ=([-+]?\d+\.\d+)'
+)
+
+
+def calibrate_sensor(finger_name: str, ad_value: int) -> Optional[float]:
+    if finger_name not in CALIBRATION_CONFIG:
+        return None
+
+    calibration_ranges = CALIBRATION_CONFIG[finger_name]
+    for min_ad, max_ad, angle in calibration_ranges:
+        if min_ad <= ad_value < max_ad:
+            return float(angle)
+
+    return float(calibration_ranges[-1][2])
+
+
+def try_put_latest(queue, frame: Dict):
+    try:
+        queue.put_nowait(frame)
+    except Full:
+        try:
+            queue.get_nowait()
+        except Empty:
+            pass
+        queue.put_nowait(frame)
 
 def unit(num):
     return 0 if num < 0 else 255 if num > 255 else int(num)
@@ -96,6 +165,130 @@ def trans2realworld_linker(angle_rad_18):
     #     angle_mapped[idx] = 255 - angle_mapped[idx]
         
     return angle_mapped
+
+
+def build_angle_rad_18(finger2vals: Dict[str, Dict[str, float]]) -> np.ndarray:
+    angle_rad_18 = np.zeros(18, dtype=np.float32)
+    for f, indices in finger_to_joint_indices.items():
+        data = finger2vals.get(f)
+        if not data:
+            continue
+
+        if f == "thumb":
+            angle_rad_18[indices[0]] = np.deg2rad(data.get("yaw", 0))
+            angle_rad_18[indices[1]] = np.deg2rad(data.get("roll", 0))
+            angle_rad_18[indices[2]] = np.deg2rad(data.get("pitch", 0))
+            angle_rad_18[indices[3]] = np.deg2rad(data.get("angle", 0))
+            angle_rad_18[indices[4]] = np.deg2rad(data.get("angle", 0))
+        else:
+            angle_rad_18[indices[0]] = np.deg2rad(data.get("yaw", 0))
+            angle_rad_18[indices[1]] = np.deg2rad(data.get("pitch", 0))
+            angle_rad_18[indices[2]] = np.deg2rad(data.get("angle", 0))
+
+    return angle_rad_18
+
+
+def collector_process(frame_queue, stop_event, port: str, baudrate: int):
+    ser = None
+    current_ad_values = None
+    current_data_group = {}
+
+    try:
+        ser = serial.Serial(
+            port=port,
+            baudrate=baudrate,
+            bytesize=8,
+            stopbits=1,
+            parity=serial.PARITY_NONE,
+            timeout=0.1
+        )
+        print(f"[采集进程] 串口已打开: {port}, 波特率: {baudrate}")
+
+        while not stop_event.is_set():
+            serial_line = ser.readline().decode('utf-8', errors='ignore').strip()
+            if not serial_line:
+                continue
+
+            ad_match = AD_PATTERN.search(serial_line)
+            if ad_match:
+                current_ad_values = [
+                    int(ad_match.group(1)),
+                    int(ad_match.group(2)),
+                    int(ad_match.group(3)),
+                    int(ad_match.group(4)),
+                    int(ad_match.group(5))
+                ]
+                current_data_group = {}
+                continue
+
+            mpu_match = MPU_PATTERN.search(serial_line)
+            if not mpu_match or current_ad_values is None:
+                continue
+
+            mpu_id = int(mpu_match.group(1))
+            finger_name = ID_TO_FINGER.get(mpu_id, f"unknown_{mpu_id}")
+            if finger_name not in FINGERS:
+                continue
+
+            ad_idx = AD_INDEX_FOR_FINGER[finger_name]
+            ad_value = current_ad_values[ad_idx]
+            current_data_group[finger_name] = {
+                "angle": calibrate_sensor(finger_name, ad_value),
+                "pitch": round(float(mpu_match.group(2)), 2),
+                "roll": round(float(mpu_match.group(3)), 2),
+                "yaw": round(float(mpu_match.group(4)), 2)
+            }
+
+            if len(current_data_group) == 5:
+                frame = {
+                    "timestamp": time.time(),
+                    "fingers": current_data_group
+                }
+                try_put_latest(frame_queue, frame)
+                current_data_group = {}
+
+    except Exception as e:
+        print(f"[采集进程] 异常: {e}")
+        stop_event.set()
+    finally:
+        if ser is not None and ser.is_open:
+            ser.close()
+            print("[采集进程] 串口已关闭")
+
+
+def control_process(frame_queue, stop_event):
+    controller = None
+    sample_count = 0
+    last_log_time = time.time()
+
+    try:
+        controller = HandController()
+        print("[控制进程] LinkerHand 控制初始化完成")
+
+        while not stop_event.is_set():
+            try:
+                frame = frame_queue.get(timeout=0.2)
+            except Empty:
+                continue
+
+            finger2vals = frame.get("fingers", {})
+            angle_rad_18 = build_angle_rad_18(finger2vals)
+            real_pos = trans2realworld_linker(angle_rad_18)
+            controller.control_hand(real_pos)
+
+            sample_count += 1
+            now = time.time()
+            if now - last_log_time >= 1.0:
+                print(f"[控制进程] 已控制 {sample_count} 帧")
+                last_log_time = now
+
+    except Exception as e:
+        print(f"[控制进程] 异常: {e}")
+        stop_event.set()
+    finally:
+        if controller is not None:
+            controller.close()
+        print("[控制进程] 已安全退出")
 
 class HandController:
     def __init__(self):
@@ -135,38 +328,47 @@ class HandController:
                 hand_info["api"].hand.bus.shutdown()
 
 def main():
-    json_path = Path(__file__).parent / "finger_sensor_data_20260312_200006.json"
-    frames_data = load_frames(json_path)
-    controller = HandController()
-    
-    print("开始 JSON 实时控制... 按 'Esc' 退出")
-    
-    try:
-        while True:
-            for ts, finger2vals in frames_data:
-                angle_rad_18 = np.zeros(18, dtype=np.float32)
-                for f, indices in finger_to_joint_indices.items():
-                    data = finger2vals.get(f)
-                    if data:
-                        if f == "thumb":
-                            angle_rad_18[indices[0]] = np.deg2rad(data.get("yaw", 0))
-                            angle_rad_18[indices[1]] = np.deg2rad(data.get("roll", 0))
-                            angle_rad_18[indices[2]] = np.deg2rad(data.get("pitch", 0))
-                            angle_rad_18[indices[3]] = np.deg2rad(data.get("angle", 0))
-                            angle_rad_18[indices[4]] = np.deg2rad(data.get("angle", 0))
-                        else:
-                            angle_rad_18[indices[0]] = np.deg2rad(data.get("yaw", 0))
-                            angle_rad_18[indices[1]] = np.deg2rad(data.get("pitch", 0))
-                            angle_rad_18[indices[2]] = np.deg2rad(data.get("angle", 0))
+    port = "COM9"
+    baudrate = 115200
 
-                real_pos = trans2realworld_linker(angle_rad_18)
-                controller.control_hand(real_pos)
-                
-                if keyboard.is_pressed('esc'): return
-                time.sleep(0.04)
-            print("循环播放结束，重新开始")
-    except KeyboardInterrupt: pass
-    finally: controller.close()
+    stop_event = mp.Event()
+    frame_queue = mp.Queue(maxsize=3)
+
+    collector = mp.Process(
+        target=collector_process,
+        args=(frame_queue, stop_event, port, baudrate),
+        name="sensor_collector"
+    )
+    controller = mp.Process(
+        target=control_process,
+        args=(frame_queue, stop_event),
+        name="hand_controller"
+    )
+
+    collector.start()
+    controller.start()
+
+    print("启动完成：串口采集进程 + 机器手控制进程")
+    print("按 Ctrl+C 停止")
+
+    try:
+        while collector.is_alive() and controller.is_alive():
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        print("\n主进程收到 Ctrl+C，准备停止...")
+    finally:
+        stop_event.set()
+
+        collector.join(timeout=3)
+        controller.join(timeout=3)
+
+        if collector.is_alive():
+            collector.terminate()
+        if controller.is_alive():
+            controller.terminate()
+
+        print("全部进程已退出")
 
 if __name__ == "__main__":
+    mp.freeze_support()
     main()

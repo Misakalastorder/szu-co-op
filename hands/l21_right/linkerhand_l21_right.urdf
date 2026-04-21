@@ -6,6 +6,9 @@
   name="linkerhand_l21_right_urdf">
   <link
     name="hand_base_link">
+
+
+    
     <inertial>
       <origin
         xyz="-0.00526243206257152 0.000224730005252721 0.0761181056976833"

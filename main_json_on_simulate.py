@@ -2,10 +2,12 @@
 调用 JSON 传感器数据驱动虚拟环境中的人手模型进行仿真
 参考自 main_h5_simulate.py
 '''
+import numpy as np
+np.bool8 = np.bool
 import gym
 import yumi_gym
 import pybullet as p
-import numpy as np
+
 import json
 import torch
 import time
